@@ -18,6 +18,7 @@ class SynthesizerType(str, Enum):
     GOOGLE = "synthesizer_google"
     ELEVEN_LABS = "synthesizer_eleven_labs"
     RIME = "synthesizer_rime"
+    COQUI = "synthesizer_coqui"
 
 
 class TrackBotSentimentConfig(BaseModel):
@@ -122,6 +123,49 @@ class ElevenLabsSynthesizerConfig(SynthesizerConfig, type=SynthesizerType.ELEVEN
     @validator("voice_id")
     def set_name(cls, voice_id):
         return voice_id or ELEVEN_LABS_ADAM_VOICE_ID
+
+    @classmethod
+    def from_output_device(
+        cls,
+        output_device: BaseOutputDevice,
+        api_key: Optional[str] = None,
+        voice_id: Optional[str] = None,
+    ):
+        return cls(
+            sampling_rate=output_device.sampling_rate,
+            audio_encoding=output_device.audio_encoding,
+            api_key=api_key,
+            voice_id=voice_id,
+        )
+
+    @classmethod
+    def from_telephone_output_device(
+        cls,
+        api_key: Optional[str] = None,
+        voice_id: Optional[str] = None,
+    ):
+        return cls(
+            sampling_rate=DEFAULT_SAMPLING_RATE,
+            audio_encoding=DEFAULT_AUDIO_ENCODING,
+            api_key=api_key,
+            voice_id=voice_id,
+        )
+
+
+COQUI_DEFAULT_SPEAKER_ID = "d2bd7ccb-1b65-4005-9578-32c4e02d8ddf"
+
+
+class CoquiSynthesizerConfig(SynthesizerConfig, type=SynthesizerType.COQUI):
+    api_key: Optional[str] = None
+    voice_id: Optional[str] = COQUI_DEFAULT_SPEAKER_ID
+    track_bot_sentiment_in_voice = TrackBotSentimentConfig(
+        emotions=["neutral", "happy", "sad", "surprise", "angry", "dull"]
+    )
+    should_encode_as_wav = True
+
+    @validator("voice_id")
+    def set_name(cls, voice_id):
+        return voice_id or COQUI_DEFAULT_SPEAKER_ID
 
     @classmethod
     def from_output_device(
